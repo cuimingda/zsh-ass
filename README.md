@@ -24,4 +24,6 @@ list_ass_dialogue_fonts
 remove_ass_dialogue_fonts
 list_ass_style_fonts
 reset_ass_fonts
+sub_normalize_utf8
+sub_list_encoding
 ```

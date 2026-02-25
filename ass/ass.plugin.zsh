@@ -3,6 +3,8 @@ asshelp() {
   echo "remove_ass_dialogue_fonts"
   echo "list_ass_style_fonts"
   echo "reset_ass_fonts"
+  echo "sub_normalize_utf8"
+  echo "sub_list_encoding"
 }
 
 list_ass_dialogue_fonts() {
@@ -106,4 +108,50 @@ reset_ass_fonts() {
   done
 
   print "Done."
+}
+
+sub_normalize_utf8() {
+  emulate -L zsh
+  setopt null_glob
+
+  local f enc tmp
+
+  for f in ./*.srt ./*.ass; do
+    enc="$(uchardet "$f" 2>/dev/null)"
+
+    case "$enc" in
+      GB18030|GBK|GB2312)
+        echo "Converting ($enc → UTF-8): $f"
+        tmp="${f}.tmp.$$"
+        if iconv -f "$enc" -t UTF-8 "$f" 2>/dev/null | tr -d '\r' > "$tmp"; then
+          mv "$tmp" "$f"
+        else
+          echo "FAILED: $f"
+          rm -f "$tmp"
+        fi
+        ;;
+      UTF-8|ASCII)
+        tmp="${f}.tmp.$$"
+        tr -d '\r' < "$f" > "$tmp" && mv "$tmp" "$f"
+        ;;
+      *)
+        echo "Skipping ($enc): $f"
+        ;;
+    esac
+  done
+
+  echo "Done."
+}
+
+sub_list_encoding() {
+  emulate -L zsh
+  setopt null_glob
+
+  local f enc info
+
+  for f in ./*.srt ./*.ass; do
+    enc="$(uchardet "$f" 2>/dev/null)"
+    info="$(file -b "$f")"
+    printf "%-50s  uchardet: %-10s  file: %s\n" "$f" "${enc:-UNKNOWN}" "$info"
+  done
 }
